@@ -220,10 +220,12 @@ object MultiLineCSVDataSource extends CSVDataSource {
     val csv = createBaseRdd(sparkSession, inputPaths, parsedOptions)
     csv.flatMap { lines =>
       val path = new Path(lines.getPath())
+      val parserSettings = parsedOptions.asParserSettings
+      parserSettings.setLineSeparatorDetectionEnabled(true)
       UnivocityParser.tokenizeStream(
         CodecStreams.createInputStreamWithCloseResource(lines.getConfiguration, path),
         shouldDropHeader = false,
-        new CsvParser(parsedOptions.asParserSettings))
+        new CsvParser(parserSettings))
     }.take(1).headOption match {
       case Some(firstRow) =>
         val caseSensitive = sparkSession.sessionState.conf.caseSensitiveAnalysis

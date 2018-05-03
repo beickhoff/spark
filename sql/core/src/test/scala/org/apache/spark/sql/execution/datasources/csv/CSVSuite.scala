@@ -38,6 +38,7 @@ class CSVSuite extends QueryTest with SharedSQLContext with SQLTestUtils with Te
   import testImplicits._
 
   private val carsFile = "test-data/cars.csv"
+  private val carsCrlfFile = "test-data/cars-crlf.csv"
   private val carsMalformedFile = "test-data/cars-malformed.csv"
   private val carsFile8859 = "test-data/cars_iso-8859-1.csv"
   private val carsTsvFile = "test-data/cars.tsv"
@@ -55,6 +56,7 @@ class CSVSuite extends QueryTest with SharedSQLContext with SQLTestUtils with Te
   private val datesFile = "test-data/dates.csv"
   private val unescapedQuotesFile = "test-data/unescaped-quotes.csv"
   private val valueMalformedFile = "test-data/value-malformed.csv"
+  private val exampleCrlfFile = "test-data/example-crlf.csv"
 
   private def testFile(fileName: String): String = {
     Thread.currentThread().getContextClassLoader.getResource(fileName).toString
@@ -1321,5 +1323,19 @@ class CSVSuite extends QueryTest with SharedSQLContext with SQLTestUtils with Te
 
     val sampled = spark.read.option("inferSchema", true).option("samplingRatio", 1.0).csv(ds)
     assert(sampled.count() == ds.count())
+  }
+
+  test("SPARK-_____: _____________________") {
+    Seq("\n", "\r\n").foreach { eol =>
+      withLineSeparator(eol) {
+        val df = spark.read
+          .format("csv")
+          .options(Map("header" -> "true", "multiLine" -> "true"))
+          .load(testFile(exampleCrlfFile))
+
+        assert(df.schema.fieldNames === Array("id", "text"))
+        assert(df.count === 2)
+      }
+    }
   }
 }

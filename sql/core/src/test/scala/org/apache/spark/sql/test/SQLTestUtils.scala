@@ -302,6 +302,19 @@ private[sql] trait SQLTestUtilsBase
   }
 
   /**
+   * Invokes `f` with the `line.separator` system property set to the given value.
+   */
+  protected def withLineSeparator(lineSeparator1: String)(f: => Unit): Unit = {
+    val lineSeparator0 = System.getProperty("line.separator")
+    try {
+      System.setProperty("line.separator", lineSeparator1)
+      f
+    } finally {
+      System.setProperty("line.separator", lineSeparator0)
+    }
+  }
+
+  /**
    * Creates a temporary database and switches current database to it before executing `f`.  This
    * database is dropped after `f` returns.
    *
