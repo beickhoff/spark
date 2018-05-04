@@ -23,6 +23,8 @@ import java.sql.{Date, Timestamp}
 import java.text.SimpleDateFormat
 import java.util.Locale
 
+import scala.io.Source
+
 import org.apache.commons.lang3.time.FastDateFormat
 import org.apache.hadoop.io.SequenceFile.CompressionType
 import org.apache.hadoop.io.compress.GzipCodec
@@ -1326,6 +1328,10 @@ class CSVSuite extends QueryTest with SharedSQLContext with SQLTestUtils with Te
   }
 
   test("SPARK-_____: _____________________") {
+    // Ensure that the file contains CRLF line endings.  Git has a tendency to convert line
+    // endings in text files, but this test is only meaningful against CRLF line endings.
+    assert(Source.fromURL(testFile(exampleCrlfFile)).mkString.contains("text\r\n"))
+
     Seq("\n", "\r\n").foreach { eol =>
       withLineSeparator(eol) {
         val df = spark.read
